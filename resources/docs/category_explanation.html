@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Explicación módulo Categoría</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;margin:40px}
+    h1{font-size:20px;margin-bottom:6px}
+    h2{font-size:16px;margin-top:18px}
+    p{line-height:1.4}
+    code{background:#f4f4f4;padding:2px 6px;border-radius:4px}
+    .section{margin-bottom:14px}
+  </style>
+</head>
+<body>
+  <h1>Explicación del módulo Categoría</h1>
+  <p><strong>Resumen:</strong> El módulo gestiona las categorías de productos (CRUD completo): listado, creación, edición y eliminación. Archivos principales: <a href="/app/Models/Category.php">app/Models/Category.php</a>, <a href="/app/Http/Controllers/CategoryController.php">app/Http/Controllers/CategoryController.php</a>, <a href="/database/migrations/2025_12_20_221333_create_categories_table.php">database/migrations/2025_12_20_221333_create_categories_table.php</a> y vistas en <a href="/resources/views/categories">resources/views/categories</a>.</p>
+
+  <div class="section">
+    <h2>1) `Category` (Modelo) — <code>app/Models/Category.php</code></h2>
+    <p><strong>HasFactory:</strong> permite usar factories para pruebas y seeders.</p>
+    <p><strong>$fillable:</strong> <code>['name','description']</code> lista de atributos asignables masivamente; protege contra Mass Assignment.</p>
+    <p><strong>products():</strong> relación <code>hasMany(Product::class)</code>. Una categoría puede tener muchos productos; permite acceder con <code>$category->products</code> o contar con <code>$category->products()->count()</code>.</p>
+  </div>
+
+  <div class="section">
+    <h2>2) Migración — <code>database/migrations/2025_12_20_221333_create_categories_table.php</code></h2>
+    <p><strong>Schema::create('categories')</strong> define la tabla:</p>
+    <ul>
+      <li><code>$table->id()</code> — clave primaria auto-incremental.</li>
+      <li><code>$table->string('name')</code> — nombre (requerido).</li>
+      <li><code>$table->text('description')->nullable()</code> — descripción opcional.</li>
+      <li><code>$table->timestamps()</code> — <code>created_at</code> y <code>updated_at</code>.</li>
+    </ul>
+    <p><strong>down()</strong> elimina la tabla con <code>Schema::dropIfExists('categories')</code>. Para aplicar: <code>php artisan migrate</code>.</p>
+  </div>
+
+  <div class="section">
+    <h2>3) Controlador — <code>app/Http/Controllers/CategoryController.php</code></h2>
+    <p><strong>__construct()</strong>: aplica <code>middleware('auth')</code> para proteger rutas (solo usuarios autenticados).</p>
+    <p><strong>index()</strong>: obtiene todas las categorías con <code>Category::all()</code> y retorna la vista <code>categories.index</code> con <code>categories</code>.</p>
+    <p><strong>create()</strong>: muestra el formulario de creación (<code>categories.create</code>).</p>
+    <p><strong>store(Request $request)</strong>: valida (<code>'name' => 'required'</code>, <code>'description' => 'nullable'</code>) y crea la categoría con <code>Category::create($request->all())</code>. Redirige con mensaje de éxito.</p>
+    <p><strong>edit(Category $category)</strong>: usa route-model binding y retorna <code>categories.edit</code> con la instancia.</p>
+    <p><strong>update(Request $request, Category $category)</strong>: valida y actualiza con <code>$category->update($request->all())</code>.</p>
+    <p><strong>destroy(Category $category)</strong>: elimina con <code>$category->delete()</code> y redirige.</p>
+    <p>La validación mínima y <code>$fillable</code> protegen contra asignaciones no deseadas.</p>
+  </div>
+
+  <div class="section">
+    <h2>4) Vistas — <code>resources/views/categories</code></h2>
+    <p><strong>index.blade.php</strong>:</p>
+    <ul>
+      <li>Muestra tabla con <em>ID, Nombre, Descripción, Productos</em>.</li>
+      <li>Usa <code>Str::limit($category->description, 50)</code> para acortar texto.</li>
+      <li>Muestra conteo de productos con <code>$category->products_count ?? $category->products()->count()</code> (usa <code>withCount</code> si está cargado).</li>
+      <li>Formulario de eliminación incluye <code>@csrf</code> y <code>@method('DELETE')</code> con confirmación JS.</li>
+    </ul>
+    <p><strong>create.blade.php</strong> y <strong>edit.blade.php</strong>: formularios con <code>@csrf</code>, validación de errores mostrada con <code>$errors->all()</code>, y en <code>edit</code> se usa <code>@method('PUT')</code> y se rellenan los campos con los valores actuales.</p>
+  </div>
+
+  <div class="section">
+    <h2>5) Puntos de integración y mejoras recomendadas</h2>
+    <ul>
+      <li>Rutas: usar <code>Route::resource('categories', CategoryController::class)</code> en <code>routes/web.php</code>.</li>
+      <li>Eager loading: cambiar <code>index()</code> a <code>Category::withCount('products')->get()</code> para evitar N+1 al contar productos.</li>
+      <li>Validación ampliada: reglas de longitud, formatos y sanitización.</li>
+      <li>Autorización: usar Policies si no todos los usuarios pueden modificar categorías.</li>
+      <li>Soft deletes: agregar <code>SoftDeletes</code> y columna <code>softDeletes()</code> si se desea recuperación.</li>
+      <li>Tests: crear tests de feature para <code>store/update/destroy</code> y acceso protegido por <code>auth</code>.</li>
+    </ul>
+  </div>
+
+  <p style="margin-top:26px">Generado automáticamente: breve explicación del módulo categoría para presentar el ejercicio.</p>
+</body>
+</html>
